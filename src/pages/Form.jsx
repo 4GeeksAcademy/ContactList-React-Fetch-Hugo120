@@ -1,7 +1,6 @@
 // Import necessary components from react-router-dom and other parts of the application.
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useParams, } from "react-router-dom";
 
 export const Form = () => {
   const [formData, setFormData] = useState({
@@ -10,34 +9,68 @@ export const Form = () => {
     email: "",
     address: ""
   });
-
+  const [updateContact, setUpdateContact] = useState(false);
+  const params = useParams();
+  const idContact = params.theId;
   const navigate = useNavigate();
+  useEffect(() => {
+    if (idContact) {
+      setUpdateContact(true);
+    }
+    else {
+      setUpdateContact(false);
+    }
+  }, [idContact]);
+
   const saveContact = async () => {
-		try {
-			const response = await fetch("https://playground.4geeks.com/contact/agendas/hugo/contacts",{
+    try {
+      const response = await fetch("https://playground.4geeks.com/contact/agendas/hugo/contacts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify(formData)
       });
-			return response;
-		} catch (error) {
-			console.error("Error fetching data:", error);
-		}
-	}
+      return response;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+  const editContact = async (idContact) => {
+    try {
+      const response = await fetch(`https://playground.4geeks.com/contact/agendas/hugo/contacts/${idContact}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+      return response;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await saveContact();
-    if(response.ok) {
+    if (updateContact) {
+      const response = await editContact(idContact);
+      if (response.ok) {
         navigate("/");
       } else {
-        console.error("Error al guardar el contacto");
+        console.error("Error al editar el contacto");
       }
+    }else {  
+    const response = await saveContact();
+    if (response.ok) {
+      navigate("/");
+    } else {
+      console.error("Error al guardar el contacto");
+    }}
   };
 
   return (
@@ -47,7 +80,7 @@ export const Form = () => {
           <div className="card shadow-sm border-0">
             <div className="card-body p-4">
               <h2 className="text-center mb-4 fw-bold text-primary">
-                Add a new contact
+                {updateContact ? "Edit Contact" : "Add a new contact"}
               </h2>
 
               <form onSubmit={handleSubmit}>
@@ -123,8 +156,8 @@ export const Form = () => {
               </form>
 
               <Link to="/"><button type="button" className="btn btn-secondary btn-lg">
-                    Volver al Menú
-                  </button></Link>
+                Volver al Menú
+              </button></Link>
             </div>
           </div>
         </div>
